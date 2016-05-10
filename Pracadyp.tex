@@ -1,0 +1,378 @@
+\documentclass[skorowidz,palatino,xodstep]{dyplomWEZUT}
+%&platex --translate-file=cp1250pl
+%\documentclass[skorowidz,brudnopis,palatino]{dyplomPS}
+
+ \nrwersji {0.2}
+
+\author   {JÍdrzej £ukasiuk}%
+\nralbumu {21746}
+\email    {nick@zut.edu.pl}
+%
+%\author   {Robert Nowicki}
+%\nralbumu {55212}
+
+\title    {Programowa implementacja filtrÛw Gabora w~procesie automatycznej klasyfikacji obiektÛw}
+\kierunek {Geodezja i Kartografia}%
+%\specjalnosc{Uk≥ady i~Systemy Elektroniczne}
+
+\date     {2016}%
+\miejsce  {Szczecin}%
+
+\opiekun  {prof.~dr~hab.~inø.~JÛzef~Sanecki}%
+\jednostka{Instytut Inøynierii Ruchu Morskiego}%
+
+\newcommand{\zmien}[1]{!!!!!!!!!\textbf{#1}!!!!!!!!!!!}
+
+\makeglossary
+% Polecenie konieczne do wygenerowania plikÛw z wykazem skrÛtÛw i oznaczeÒ
+% makeindex -s Pracadyp.ist -t Pracadyp.glg -o Pracadyp.gls Pracadyp.glo
+
+
+\newcommand{\ber}{\begin{eqnarray*}}
+\newcommand{\eer}{\end{eqnarray*}}
+\newcommand{\beq}{\begin{eqnarray}}
+\newcommand{\eeq}{\end{eqnarray}}
+\newcommand{\bd}{\begin{displaymath}}
+\newcommand{\ed}{\end{displaymath}}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+
+
+\begin{document}
+
+\begin{streszczenie}
+KR”TKO I NA TEMAT BEZ ZB DNEGO PIERDOLENIA
+\end{streszczenie}
+
+\slowakluczowe{filtry Gabora, klasyfikacja, zdalne rozpoznanie terenu}
+
+
+%\tytulang{Application of two-dimensional Gabor filters for vision based pattern recognition and classification}
+\tytulang{Software implementation of Gabor filters in the process of automatic object classification}
+
+\begin{abstract}
+Will be added later \end{abstract}
+
+\keywords{Gabor filters, classification, remote reconnaissance}
+
+%% TO JEST TA åMIESZNA 'WK£ADKA' - EWENTUALNIE MOØNA ZMERGOWA∆ OSOBNYM PROGRAMEM DWA GOTOWE PLIKI
+%\includepdf[pages=-]{tabela.pdf}
+
+\maketitle 
+
+\printglossary
+
+\Wprowadzenie 
+
+Podstawπ procesu zdalnego badania úrodowiska (ZBå) jest analiza i interpretacja zdjÍÊ pozsykanych zdalnie. Przez pojÍcie interpretacji moøemy tu rozumieÊ przede wszystkim wykrywanie i rozpoznawanie obiektÛw, jak rÛwnieø okreúlenie ich cech iloúciowych i~jakoúciowych.  \cite{Tele}
+
+%\begin{itemize}
+	%\item Teledetekcja, zdalne pozysanie
+	%\item intepretacja, klasyfikacja
+	%\item metdy wielosektralne
+	%\item podejúcie geometryczne
+	%\item Filtry Gabora
+	%\item cel i zakres
+%\end{itemize}
+%
+
+Klasyczne podejúcie do interpretacji zdjÍÊ oparte jest o analizÍ wielospektralnπ. Analiza ta zak≥ada, øe piksele obrazu reprezentujπce ten sam obiekt majπ podobne wartoúci odpowiedzi spektralnej. Wobec tego w przestrzeni spektralnej bÍdπ skupia≥y siÍ w grupach. 
+
+Niewπtpliwie podejúcie te ma swoje oczywiste zalety (prostota realizacji), jednak nie zawsze jest rozwiπzaniem optymalnym. SpoúrÛd innych algorytmÛw s≥uøacych  do klasyfikacji zdjÍÊ szczegÛlnie obiecujπcym wydajÍ siÍ byÊ tzw. algorytm klasyfikacji obiektowej. W algorytmie tym piksele obrazu nie sπ rozpatrywane w sposÛb jednostkowy, lecz znaczenie ma ich lokalne rozmieszczenie. Piksele tworzπ wÛwczas grupy, ktÛre spe≥niajπ pewne warunki jednorodnoúci. Grupy te wizualnie stanowiπ lokalne wzorce przestrzenne, ktÛre formalnie moøemy okreúliÊ jako tekstura. 
+
+Jednym z narzÍdzi s≥uøπcych do wykrywania tekstur w obrazach jest filtr Gabora. Jest to filtr liniowy, 
+% przemyúleÊ to zdanie 
+ktÛrego reprezentacja czÍstotliwoúciowa i orientacja jest zbliøona do ludzkiego systemu wizyjnego, przez co bardzo dobrze sprawdza siÍ on jako deskryptor cech teksturalnych. Wykorzystujπc filtr Gabora o precyzyjnie dobranych parametrach jesteúmy w stanie wydobyÊ z obrazu wejúciowego informacjÍ o poszczegÛlnych elementach sk≥adowych obrazu.
+
+\cel{Celem pracy jest analiza wybranych metod cyfrowego przetwarzania obrazÛw, oraz ich praktyczna realizacja, ktÛra umoøliwi automatycznπ klasyfikacjÍ obiektÛw na zobrazowaniach lotniczych i fotogrametrycznych.} 
+
+
+
+\zakres{Zakres pracy obejmuje:
+\begin{itemize}
+	\item wprowadzenie do tematyki cyfrowego przetwarzania obrazÛw, opis wybranych metod komputerowego przetwarzania obrazÛw
+	\item matematyczny opis filtru Gabora; jego charakterystyki w dziedzinie czasowej i czÍstotliwoúciowej 
+	\item omÛwienie zaganienia klasyfikacji obiektÛw, klasyczne i alernatywne metody jej realizacji
+	\item zaproponowanie algorytmu do automatycznej klasyfikacji obiektÛw na podstawie dostÍpnych materia≥Ûw ürÛd≥owych (?)
+	\item praktycznπ realizacjÍ algorytmu w úrodowisku \textsc{MatLab} dla wybranych zobrazowaÒ lotniczych/fotogrametrycznych
+	\item porÛwnanie uzyskanych wynikÛw z klasycznymi metodami klasyfikacji obietkÛw
+\end{itemize}
+} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% ROZDZIA£: WYbrane metody analizy obrazÛw cyfrowych %%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\chapter{Obraz cyfrowy i wybrane metody jego przetwarzania}
+
+W dobie nieustajπcego rozwoju technologicznego, w jakiej aktualnie siÍ znajdujemy, zdecydowana wiÍkszoúÊ zdalnie pozyskiwanych zdjÍÊ ma charakter cyfrowy. Cechπ charakterystycznπ takiego zdjÍcia jest jego rozdzielczoúÊ -- skoÒczona liczba pikseli (punktÛw) matrycy na ktÛrych przechowywana jest informacja obrazowa.
+%Aby zrealizowaÊ algorytm klasyfikacji obiektowej konieczne jest wykonanie kilku operacji na obrazie wejúciowym, ktÛre znaczπco wp≥ynπ na przedstawionπ na nim informacjÍ. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% Dyskretny splot %%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Macierzowa reprezentacja obrazÛw cyfrowych}
+% wyrÛøniÊ pojÍcia rozdzielczoúÊi przestrzennej i radiometrycznej
+\subsection{Obrazy w skali RGB}
+\subsection{Obrazy w skali szaroúci}
+\begin{figure}[h]
+	\centering
+		\includegraphics[scale=1]{figures/piksel.png}
+	\caption{Reprezentacja obrazu cyfrowego}
+	\label{fig:piksel}
+	\source{Opracowanie w≥asne}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% Dyskretny splot %%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Filtracja splotowa}
+
+Naleøy ona do grupy przekszta≥ceÒ kontekstowych. Oznacza to, øe do wyznaczenia wartoúci pojedynczego piksela obrazu wyjúciowego potrzebne jest wykonanie obliczeÒ na wielu pikselach obrazu wejúciowego. 
+
+Z matematycznego punktu widzenia operacjÍ tπ moøemy zapisaÊ w sposÛb nastÍpujπcy:
+\begin{equation}
+g(x,y) = f * M = \sum\limits_{k=-\frac{m}{2}}^{\frac{m}{2}}\sum\limits_{k=-\frac{m}{2}}^{\frac{m}{2}}{M(h,k)\cdot f(x-h,y-k)}
+\end{equation}
+gdzie:
+\begin{itemize}
+	\item $*$ -- operacja splotu
+	\item $f$ -- obraz wejúciowy
+	\item $M$ -- maska filtru
+	\item $m$ -- rozmiar maski 
+	%\item
+\end{itemize}
+\begin{figure}[h]
+
+  \centering\includegraphics[scale= 0.5]{figures/splocik}
+	\vspace{0.5cm}
+  \caption[Zasada dzia≥ania splotu dyskretnego]{Zasada dzia≥ania splotu dyskretnego}
+	\source{Opracowanie w≥asne}
+  %\label{fig:rysunek2}\source{Opracowanie na podstawie dokumentacji elektronicznej MATLAB 7.0 \cite{Matlab}}
+\end{figure}
+
+
+\section{Filtr Gabora}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% DZIEDZINA CZASU %%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Dziedzina czasu}
+
+%% R”WNANIE FUNKCJI GABORA W DZIEDZINIE CZASU
+\begin{equation}
+g(x,y,f,\theta) = e^{-\frac{1}{2}\left(\frac{x_\theta^2}{\sigma_x^2}+\frac{y_\theta^2}{\sigma_y^2} \right)} \times e^{j 2 \pi f x_\theta}
+\label{maineq}
+\end{equation}
+gdzie $f$ jest czÍstotliwoúciπ fali sinusoidalnej, $\theta$ -- orientacjπ filtru Gabora, $\sigma_x$ , $\sigma_y$ sπ ostroúciami filtru odpowiednio wzd≥uø osi $x$ i $y$. WspÛ≥rzÍdne $x_\theta$ oraz $y_\theta$ umieszczone sπ w skrÍconym uk≥adzie wspÛ≥rzÍdnych, moøemy je wyliczyÊ zgodnie ze wzorem:
+
+\begin{eqnarray}
+\begin{array}{cccccc}
+ x_{\theta} & = &  &x \cos\theta& + &y\sin\theta \\
+ y_{\theta} & = & - &x\sin\theta & + &y\cos\theta 
+
+\end{array}
+\label{eqrot2}
+\end{eqnarray}
+
+\begin{equation}
+g(x,y,f,\theta) = e^{-\frac{1}{2}\left(\frac{x_\theta^2}{\sigma_x^2}+\frac{y_\theta^2}{\sigma_y^2} \right)} \times \cos( 2 \pi f x_\theta)
+\label{maineq}
+\end{equation}
+
+\begin{figure}[h]
+
+    \centering
+		    \begin{subfigure}{0.45\textwidth}
+        \includegraphics[width=\textwidth]{figures/filtrsin}
+        \caption{Zespolona sinusoida -- czÍúÊ parzysta}
+         \end{subfigure}
+   \:
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics[width=\textwidth]{figures/filtrenv}
+       \caption{Koperta Gaussa}
+        %\label{fig:tiger}
+    \end{subfigure}
+		\\
+		\begin{subfigure}{0.45\textwidth}
+        \includegraphics[width=\textwidth]{figures/filtrall}
+       \caption{Filtr Gabora -- czÍúÊ parzysta}
+        %\label{fig:tiger}
+    \end{subfigure}
+				
+				\vspace{0.5cm}
+		\caption[Filtr Gabora w dziedzinie przestrzennej]{Filtr Gabora w dziedzinie przestrzennej. Parametry: $f = 0.3$, $\theta = \pi/3$, $\sigma_x=\sigma_y= 2$}
+	\source{Opracowanie w≥asne}
+	\label{filtrt}
+\end{figure}
+
+% to pÛüniej skasowaÊ
+%\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% DZIEDZINA CZ STOTLIWOå∆I %%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Dziedzina czÍstotliwoúci}
+
+%% R”WNANIE FUNKCJI GABORA W DZIEDZINIE CZ STOTLIWOåCI
+%% TUTAJ COå SI  NIE ZGADZA ?!!!!! skπd by≥ brany wzÛr ??
+\begin{equation}
+G(u,v,f,\theta) = \frac{1}{2\pi\sigma_u\sigma_v}\left[e^{-\frac{1}{2}\left(\frac{(u_\theta-u_0)^2}{\sigma_u^2}+\frac{(v_\theta-v_0)^2}{\sigma_v^2} \right)} + e^{-\frac{1}{2}\left(\frac{(u_\theta+u_0)^2}{\sigma_u^2} + \frac{(v_\theta+v_0)^2}{\sigma_v^2} \right)} \right]
+\label{maineqf}
+\end{equation}
+gdzie $u_0$, $v_0$ sπ rÛwne odpowiednio $\frac{2\pi\cos\theta}{f}$, $\frac{2\pi\sin\theta}{f}$. Ponadto zachodzi zaleønoúÊ:
+\begin{eqnarray}
+\begin{array}{cccccc}
+ u_{\theta} & = &  &u \cos\theta& + &v\sin\theta \\
+ v_{\theta} & = & - &u\sin\theta & + &v\cos\theta 
+\label{eqrot}
+\end{array}
+\end{eqnarray}
+
+\begin{figure}[h]
+
+  \centering\includegraphics[scale= 0.5]{figures/filtrdzf}
+	\vspace{0.5cm}
+  \caption[Filtr Gabora w dziedzinie czÍstotliwoúci]{Filtr Gabora w dziedzinie czÍstotliwoúci. Parametry identyczne jak dla filtru z Rysunku \ref{filtrt}}
+	\source{Opracowanie w≥asne}
+  %\label{fig:rysunek2}\source{Opracowanie na podstawie dokumentacji elektronicznej MATLAB 7.0 \cite{Matlab}}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% ROZDZIA£ PROCEDURY KLASYFIKACYJNE%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Procedury klasyfkacyjne}
+\section{Idea klasyfikacji}
+\section{Klasyfikacja nadzorowana}
+\section{Klasyfikacja nienadzorowana}
+
+%%%%%%%%%%%%%%%%%%%%%%% ROZDZIA£ PRAKTYCZNY - IMPLEMENTACJA %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Implementacja filtru Gabora w úrodowisku \textsc{MatLab}}
+\section{Metodologia dzia≥aÒ}
+\section{Przypadek 1}
+\section{Przypadek 2}
+\section{Przypadek 3}
+
+
+\Zakonczenie
+TUTAJ JAKIEå ZWI Z£E PODSUMOWANIE PRACY KILKA PIERD”£ ITP
+%W~tym miejscu naleøy umieúciÊ zakoÒczenie pracy przygotowane zgodnie
+%z~wczeúniejszymi zaleceniami (patrz rozdzia≥~\ref{sec:zakonczenie}
+%na stronie~\pageref{sec:zakonczenie}).
+%
+%
+%%
+%% Za≥πczniki (opcjonalnie):
+%\appendix
+%\chapter{Tytu≥ za≥πcznika jeden\label{chap:app1}}
+%
+%TreúÊ za≥πcznika jeden. Mogπ to byÊ elementy zwiπzane z~opisem
+%technicznym wykonanych w~pracy urzπdzeÒ, programÛw, dokumentacjπ
+%projektowπ itp. Mogπ to byÊ rÛwnieø ürÛd≥a literaturowe w~postaci
+%kart katalogowych najistotniejszych elementÛw elektronicznych uøytych
+%w~projektowanym urzπdzeniu itp.
+%
+\appendix
+\chapter{ZawartoúÊ dodatkowej p≥yty CD-ROM\label{chap:appCD}}
+
+W~tym rozdziale powinno siÍ przedstawiÊ \textbf{zawartoúÊ DODATKOWEJ p≥yty CD do≥πczonej
+ewentualnie do wydrukowanej pracy}, ktÛra zawiera kody programÛw,
+wersje elektroniczne dokumentacji, materia≥y dodatkowe zebrane przez
+studenta itp.
+
+\noindent \textbf{Uwaga! Nie jest to opis p≥yty, zawierajπcej wersjÍ elektronicznπ pracy, ale p≥yty dodatkowej, nieobowiπzkowej.}
+
+\begin{thebibliography}{15}
+
+\bibitem{Tele}
+Sanecki J., StÍpieÒ G., Konieczny J., Niebylski J., Klewski A.:
+\newblock {\em TELEDETEKCJA. Wykorzystanie zdalnej informacji}.
+\newblock Wydawnictwo Naukowe Akademii Morskiej, 2015.
+
+\bibitem{SIP}
+Bielecka E., Maj K.:
+\newblock {\em Systemy informacji przestrzennej. Podstawy teoretyczne.}
+\newblock Wojskowa Akademia Techniczna, Warszawa 2009.
+
+\bibitem{raster}
+Kubik T., PaluszyÒski W., Iwaniak A. TymkÛw P.:
+\newblock {\em Klasyfikacja obrazÛw rastrowych~z wykorzystaniem sztucznych sieci neuronowych i statystycznych metod klasyfikacji}.
+\newblock Wydawnictwo Uniwersytetu Przyrodniczego we Wroc≥awiu, Wroc≥aw 2008.
+
+\bibitem{Lew}
+LewiÒski S.:
+\newblock {\em Obiektowa klasyfikacja zdjÍÊ satelitarnych jako metoda pozyskiwania informacji o pokryciu i uøytkowaniu Ziemii.}
+\newblock Instytut Geodezji i Kartografii PW, Warszawa 2007.
+
+\bibitem{Lew2}
+LewiÒski S.:
+\newblock{\em Rozpoznanie form pokrycia i uøytkowania Ziemii na zdjÍciu satelitarnym Landsat ETM+ metodπ klasyfikacji obiektowej}.
+\newblock{Polskie Towarzystwo Informacji Przestrzennej, Roczniki Geomatyki,
+tom IV, z. 3, s. 139-150. Warszawa.}
+
+\bibitem{marmol1}
+Marmol U., Lenda G.:
+\newblock {\em Filtry teksturalne w procesie automatycznej klasyfikacji obiektÛw}.
+\newblock {Archiwum Fotogrametrii, Kartografii i Teledetekcji, Vol. 21, 2010, s. 235-243}
+
+\bibitem{kompana}
+Tadeusiewicz R., Korohoda P.:
+\newblock {\em Komputerowa analiza i przetwarzanie obrazÛw}
+\newblock{Wydawnictwo Fudacji PostÍpu telekomunikacji, KrakÛw 1997}
+
+\bibitem{marmol2}
+Marmol U.:
+\newblock{Use of Gabor filters for texture classification of airobrne images and lidar data}.
+\newblock{Archives of Photogrammetry, Cartography and Remote Sensing, Vol. 22, 2011, pp. 325-336}
+
+
+
+\bibitem{design}
+Vo\ss{} N., Mertsching B.:
+\newblock{\em Design and Implementation of an Accelerated
+Gabor Filter Bank Using Parallel Hardware}.
+% TUTAJ TRZEBA JESZCZE SPRAWDZI∆ CZY DOBRZE
+\newblock{Technical Report (?),University of Hamburg, Department of Computer Science}.
+
+\bibitem{effic}
+Ilonen J., K\"am\"ar\"ainen J.-K., Kalvi\"ainen H.:
+\newblock{\em Efficient Computation of Gabor Features}.
+\newblock{Lappeenranta 2005}
+
+\bibitem{opttex}
+Clausi D. A., Jernigan M. E.: 
+\newblock{\em Designing Gabor filters for optimal texture separability.}
+\newblock{Pattern Recognition 33, s. 1835ñ1849., 2000}
+
+\end{thebibliography}
+
+%%%%%%%%%%%%%%%%%%%%%% SPIS RYSUNK”W %%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\listoffigures
+
+%%%%%%%%%%%%%%%%%%%%%% SPIS TABEL %%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\listoftables
+
+
+%%%%%%%%%%%%%%%%%%%%%% SPIS KOD”W èR”D£OWYCH %%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\listof{Program}{Spis kodÛw ürÛd≥owych}
+\addcontentsline{toc}{chapter}{Spis kodÛw ürÛd≥owych}
+
+
+%% Skorowidz (opcjonalnie)
+\printindex
+
+
+\end{document}
