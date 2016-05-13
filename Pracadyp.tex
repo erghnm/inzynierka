@@ -41,7 +41,7 @@
 \begin{document}
 
 \begin{streszczenie}
-KRÓTKO I NA TEMAT BEZ ZBÊDNEGO PIERDOLENIA
+\textcolor{red}{KRÓTKO I NA TEMAT}
 \end{streszczenie}
 
 \slowakluczowe{filtry Gabora, klasyfikacja, zdalne rozpoznanie terenu}
@@ -51,7 +51,8 @@ KRÓTKO I NA TEMAT BEZ ZBÊDNEGO PIERDOLENIA
 \tytulang{Software implementation of Gabor filters in the process of automatic object classification}
 
 \begin{abstract}
-Will be added later \end{abstract}
+\textcolor{red}{Here's translation of above part}
+\end{abstract}
 
 \keywords{Gabor filters, classification, remote reconnaissance}
 
@@ -64,25 +65,14 @@ Will be added later \end{abstract}
 
 \Wprowadzenie 
 
-Podstaw¹ procesu zdalnego badania œrodowiska (ZBŒ) jest analiza i interpretacja zdjêæ pozsykanych zdalnie. Przez pojêcie interpretacji mo¿emy tu rozumieæ przede wszystkim wykrywanie i rozpoznawanie obiektów, jak równie¿ okreœlenie ich cech iloœciowych i~jakoœciowych.  \cite{Tele}
-
-%\begin{itemize}
-	%\item Teledetekcja, zdalne pozysanie
-	%\item intepretacja, klasyfikacja
-	%\item metdy wielosektralne
-	%\item podejœcie geometryczne
-	%\item Filtry Gabora
-	%\item cel i zakres
-%\end{itemize}
-%
+Podstaw¹ procesu zdalnego badania œrodowiska (ZBŒ) jest analiza i interpretacja zdjêæ pozyskanych zdalnie. Przez pojêcie interpretacji mo¿emy tu rozumieæ przede wszystkim wykrywanie i rozpoznawanie obiektów, jak równie¿ okreœlenie ich cech iloœciowych i~jakoœciowych.  \cite{Tele}
 
 Klasyczne podejœcie do interpretacji zdjêæ oparte jest o analizê wielospektraln¹. Analiza ta zak³ada, ¿e piksele obrazu reprezentuj¹ce ten sam obiekt maj¹ podobne wartoœci odpowiedzi spektralnej. Wobec tego w przestrzeni spektralnej bêd¹ skupia³y siê w grupach. 
 
 Niew¹tpliwie podejœcie te ma swoje oczywiste zalety (prostota realizacji), jednak nie zawsze jest rozwi¹zaniem optymalnym. Spoœród innych algorytmów s³u¿acych  do klasyfikacji zdjêæ szczególnie obiecuj¹cym wydajê siê byæ tzw. algorytm klasyfikacji obiektowej. W algorytmie tym piksele obrazu nie s¹ rozpatrywane w sposób jednostkowy, lecz znaczenie ma ich lokalne rozmieszczenie. Piksele tworz¹ wówczas grupy, które spe³niaj¹ pewne warunki jednorodnoœci. Grupy te wizualnie stanowi¹ lokalne wzorce przestrzenne, które formalnie mo¿emy okreœliæ jako tekstura. 
 
-Jednym z narzêdzi s³u¿¹cych do wykrywania tekstur w obrazach jest filtr Gabora. Jest to filtr liniowy, 
-% przemyœleæ to zdanie 
-którego reprezentacja czêstotliwoœciowa i orientacja jest zbli¿ona do ludzkiego systemu wizyjnego, przez co bardzo dobrze sprawdza siê on jako deskryptor cech teksturalnych. Wykorzystuj¹c filtr Gabora o precyzyjnie dobranych parametrach jesteœmy w stanie wydobyæ z obrazu wejœciowego informacjê o poszczególnych elementach sk³adowych obrazu.
+Jednym z narzêdzi s³u¿¹cych do wykrywania tekstur w obrazach jest filtr Gabora. Jest to filtr liniowy, którego reprezentacja czêstotliwoœciowa i orientacja jest zbli¿ona do ludzkiego systemu wizyjnego, przez co bardzo dobrze sprawdza siê jako deskryptor cech teksturalnych. Przetwarzaj¹c obraz wykorzystuj¹c filtr Gabora o precyzyjnie do-
+branych parametrach jesteœmy w stanie wydobyæ z obrazu wejœciowego informacjê o poszczególnych elementach sk³adowych obrazu, a zatem wyró¿niæ obiekty reprezentuj¹ce. 
 
 \cel{Celem pracy jest analiza wybranych metod cyfrowego przetwarzania obrazów, oraz ich praktyczna realizacja, która umo¿liwi automatyczn¹ klasyfikacjê obiektów na zobrazowaniach lotniczych i fotogrametrycznych.} 
 
@@ -104,30 +94,130 @@ którego reprezentacja czêstotliwoœciowa i orientacja jest zbli¿ona do ludzkiego 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\chapter{Obraz cyfrowy i wybrane metody jego przetwarzania}
+\chapter{Charakterystyka danych teledetekcyjnych i wybrane metody ich przetwarzania}
 
 W dobie nieustaj¹cego rozwoju technologicznego, w jakiej aktualnie siê znajdujemy, zdecydowana wiêkszoœæ zdalnie pozyskiwanych zdjêæ ma charakter cyfrowy. Cech¹ charakterystyczn¹ takiego zdjêcia jest jego rozdzielczoœæ -- skoñczona liczba pikseli (punktów) matrycy na których przechowywana jest informacja obrazowa.
-%Aby zrealizowaæ algorytm klasyfikacji obiektowej konieczne jest wykonanie kilku operacji na obrazie wejœciowym, które znacz¹co wp³yn¹ na przedstawion¹ na nim informacjê. 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%% Dyskretny splot %%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Macierzowa reprezentacja obrazów cyfrowych}
-% wyró¿niæ pojêcia rozdzielczoœæi przestrzennej i radiometrycznej
-\subsection{Obrazy w skali RGB}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% Struktura rastrowych obrazów cyfrowych %%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Struktura rastrowych obrazów cyfrowych}
+Grafika rastrowa determinuje reprezentacjê obrazu jako dwuwymiarow¹ siatkê sk³adaj¹c¹ siê ze wczeœniej wspomnianych pikseli. Ka¿dy z pikseli natomiast przechowuje
+skoñczon¹ liczbê bêd¹c¹ informacj¹ o kolorze. Z samej ju¿ definicji wynika, ¿e reprezentacja ta jest nieci¹g³a (dyskretna). Obraz cyfrowy jest wiêc pewnym uproszczeniem w
+stosunku do tego, co odbiera ludzki zmys³ wzroku. Samo ograniczenie rozmiaru obrazu cyfrowego wynika z potrzeby jego zapisu na skoñczonej liczbie bajtów w komputerze, jak równie¿ ograniczeñ wynikaj¹cych z mo¿liwoœci dalszego przetwarzania takiego obrazu. Ograniczenia te mog¹ byæ reprezentowane na wielu p³aszczyznach \cite{kompana}:
+\begin{itemize}
+\item ograniczenie zdolnoœci rozpoznawania szczegó³ów,
+\item ograniczenie iloœci mo¿liwych do rozró¿nienia kolorów,
+\item analizowanie obrazu p³askiego zamiast przestrzennego,
+\item analizowanie obrazu statycznego zamiast dynamicznego.
+\end{itemize}
+Z formalnego punktu widzenia obraz mo¿emy zamodelowaæ przy u¿yciu funkcji (tzw. funkcji obrazu) dwóch zmiennych. Zmienne traktowane s¹ wówczas jako wspó³rzêdne i
+okreœlaj¹ jasnoœæ obrazu w tym punkcie.
+
+\begin{equation}
+0 \leq L(x,y) < \infty
+\end{equation}
+gdzie:
+\begin{flushleft}
+$L$ -- funkcja obrazu (luminancji) \\
+$(x,y)$ -- przestrzenna wspó³rzêdna funkcji L
+\end{flushleft}
+
+\begin{figure}[h]
+
+    \centering
+		    \begin{subfigure}{0.45\textwidth}
+        \includegraphics[height= 5.5cm]{figures/zwykly}
+        \caption{Obraz monochromatyczny}
+         \end{subfigure}
+   \:
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics[height= 5.5cm]{figures/obraz3D}
+       \caption{Obraz (a) jako funkcja $L(x,y)$}
+        %\label{fig:tiger}
+    \end{subfigure}
+
+				\vspace{0.5cm}
+		\caption[Obraz monochromatyczny i jego reprezentacja jako funkcja luminancji]{Obraz monochromatyczny i jego reprezentacja jako funkcja luminancji}
+	\source{\url{http://earthexplorer.usgs.gov/}, adaptacja w³asna}
+	\label{filtrt}
+\end{figure}
+Ka¿dy obraz rzeczywisty mo¿na przedstawiæ za pomoc¹ tej w³aœnie funkcji (pamiêtajmy jednak, ¿e zawsze bêdzie on pewnym uproszczeniem). Proces przejœcia z obrazu
+analogowego na cyfrowy nosi nazwê dyskretretyzacji. Sk³ada siê on z 2 zasadniczych procesów: próbkowania i kwantyzacji. W etapie próbkowania ci¹g³a dziedzina obrazu
+analogowego zostaje zamieniona na skoñczony ci¹g próbek (w tym przypadku pikseli). W procesie kwantyzacji nastêpuje natomiast zmiana analogowej wartoœci janoœci na jej
+dyskretny odpowiednik. W efekcie funkcja L(x,y) staje siê macierz¹ L(m,n) o M wierszach i N kolumnach. Rozmiary tej macierzy definiuj¹ rozdzielczoœæ obrazu cyfrowego,
+a ka¿dy element tej macierzy przechowuje skwantowany poziom jasnoœci.
+\begin{equation}
+L(x,y) = \left[ \begin{array}{cccc} L(1,1) & L(1,2) & \dots & L(1,N) \\ L(2,1) & L(2,2) & \dots & L(2,N) \\ \vdots & \vdots &  \ddots & \dots \\L(M,1) & L(M,2) & \dots & L(M,N) \end{array} \right]
+\end{equation}
+Wybór rozdzielczoœci obrazu ma kluczowe znaczenie przy rozpoznawaniu szczegó³ów obrazu. Oczywiœcie naturalne wydaje siê stwierdzenie ¿e im wiêksza rozdzielczoœæ tym
+lepiej.  Nie jest to jednak prawid³owe podejœcie do tego problemu. Liniowy wzrost
+rozdzielczoœci poci¹ga za sob¹ kwadratowy wzrost czasu przetwarzania i objêtoœci samej reprezentacji\cite{kompana}.
+
+\begin{itemize}
+\item \textbf{binarne}
+\item \textbf{monochromatyczne}
+\item \textbf{kolorowe}
+\end{itemize}
+
+\subsection{Obrazy binarne}
+
+\begin{figure}[h]
+
+  \centering\includegraphics[scale= 0.5]{figures/bin}
+	\vspace{0.5cm}
+  \caption[Obraz binarny]{Obraz binarny}
+	\source{\url{http://earthexplorer.usgs.gov/}, adaptacja w³asna}
+  %\label{fig:rysunek2}\source{Opracowanie na podstawie dokumentacji elektronicznej MATLAB 7.0 \cite{Matlab}}
+\end{figure}
+
 \subsection{Obrazy w skali szaroœci}
 \begin{figure}[h]
 	\centering
-		\includegraphics[scale=1]{figures/piksel.png}
+		\includegraphics[scale=0.8]{figures/piksel.png}
 	\caption{Reprezentacja obrazu cyfrowego}
 	\label{fig:piksel}
 	\source{Opracowanie w³asne}
 \end{figure}
 
+\subsection{Obrazy w skali RGB}
+dsaddasd
+\begin{figure}[h!]
+
+    \centering
+		    \begin{subfigure}{0.45\textwidth}
+        \includegraphics[width=\textwidth]{figures/rgbb}
+        \caption{Obraz w przestrzeni barw RGB}
+         \end{subfigure}
+   \\
+    \begin{subfigure}{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figures/r}
+       \caption{Koperta Gaussa}
+        %\label{fig:tiger}
+    \end{subfigure}
+		\:
+		\begin{subfigure}{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figures/g}
+       \caption{Filtr Gabora -- czêœæ parzysta}
+        %\label{fig:tiger}
+    \end{subfigure}
+		\:
+		  \begin{subfigure}{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figures/b}
+       \caption{Koperta Gaussa}
+        %\label{fig:tiger}
+    \end{subfigure}
+						
+				\vspace{0.5cm}
+		\caption[Obraz w przestrzeni barw RGB i jego sk³adowe]{Obraz w przestrzeni barw RGB i jego sk³adowe}
+	\source{\url{http://earthexplorer.usgs.gov/}, adaptacja w³asna}
+	\label{filtrt}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%% Dyskretny splot %%%%%%%%%%%%%%%%%
+%%%%%%% FILTRACJA SPLOTOWA %%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Filtracja splotowa}
@@ -155,15 +245,28 @@ gdzie:
   %\label{fig:rysunek2}\source{Opracowanie na podstawie dokumentacji elektronicznej MATLAB 7.0 \cite{Matlab}}
 \end{figure}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%% FILTR GABORA %%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Filtr Gabora}
+
+Filtr Gabora jest filtrem pasmowoprzepustowym. Oznacza to, ¿e po filtracji z jego
+wykorzystaniem zostan¹ wyeksponowane sk³adowe widma o okreœlonej czêstotliwoœci.
+Jego twórc¹ jest Dennis Gabor, wêgieski laureat Nagrody Nobla w dziedzinie fizyki
+(1900-1979). Filtr ten wykorzystywany jest g³ównie do detekcji tekstur w obrazach, oraz
+przy wykrywaniu krawêdzi. W cyfrowym przetwarzaniu obrazów mo¿na go realizowaæ
+w dziedzinie przestrzennej poprzez dyskretn¹ dwuwymiarow¹ konwolucjê z wyliczon¹
+mask¹ lub przez zwyk³e mno¿enie w dziedzinie czêstotliwoœci (wykorzystujemy tutaj
+twierdzenie o splocie)
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% DZIEDZINA CZASU %%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Dziedzina czasu}
-
+\subsubsection{Dziedzina czasu}
+W dziedzinie przestrzennej filtr charakteryzowany jest jako zespolona sinusoida (ang. carrier) modulowana funkcj¹ Gaussa (funkcjê tê okreœla siê jako koperta, ang. envelope).
 %% RÓWNANIE FUNKCJI GABORA W DZIEDZINIE CZASU
 \begin{equation}
 g(x,y,f,\theta) = e^{-\frac{1}{2}\left(\frac{x_\theta^2}{\sigma_x^2}+\frac{y_\theta^2}{\sigma_y^2} \right)} \times e^{j 2 \pi f x_\theta}
@@ -179,11 +282,17 @@ gdzie $f$ jest czêstotliwoœci¹ fali sinusoidalnej, $\theta$ -- orientacj¹ filtru
 \end{array}
 \label{eqrot2}
 \end{eqnarray}
-
+Zgodnie z twierdzeniem Eulera wzór (\ref{maineq}) mo¿emy przedstawiæ jako:
 \begin{equation}
-g(x,y,f,\theta) = e^{-\frac{1}{2}\left(\frac{x_\theta^2}{\sigma_x^2}+\frac{y_\theta^2}{\sigma_y^2} \right)} \times \cos( 2 \pi f x_\theta)
-\label{maineq}
+g(x,y,f,\theta) = e^{-\frac{1}{2}\left(\frac{x_\theta^2}{\sigma_x^2}+\frac{y_\theta^2}{\sigma_y^2} \right)} \times \left( \cos(2\pi f x_\theta) + j  \sin(2 \pi f x_\theta) \right)
 \end{equation}
+Na podstawie tego wzoru jawnie widaæ ¿e filtr ma 2 czêœci: rzeczywist¹ i urojon¹. W
+zastosowaniach praktycznych czêsto zamiast zespolonej postaci funkcji Gabora wyko-
+rzystuje siê jego postaæ rzeczywist¹. Wybiera siê wówczas modulacjê tylko fal¹ sinuso-
+idaln¹ lub cosinusoidaln¹. Ze wzglêdu na w³aœciwoœci tych funkcji trygonometrycznych
+w swojej dziedzinie mówimy wówczas ¿e filtr jest nieparzysty (w przypadku modula-
+cji sinusem) lub parzysty (modulacja cosinusem). W znacz¹cej czêœci przypadków do
+filtracji u¿ywamy filtru parzystego (ang. Even).
 
 \begin{figure}[h]
 
@@ -218,7 +327,7 @@ g(x,y,f,\theta) = e^{-\frac{1}{2}\left(\frac{x_\theta^2}{\sigma_x^2}+\frac{y_\th
 %%%%% DZIEDZINA CZÊSTOTLIWOŒÆI %%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Dziedzina czêstotliwoœci}
+\subsubsection{Dziedzina czêstotliwoœci}
 
 %% RÓWNANIE FUNKCJI GABORA W DZIEDZINIE CZÊSTOTLIWOŒCI
 %% TUTAJ COŒ SIÊ NIE ZGADZA ?!!!!! sk¹d by³ brany wzór ??
@@ -296,8 +405,13 @@ studenta itp.
 
 \bibitem{Tele}
 Sanecki J., Stêpieñ G., Konieczny J., Niebylski J., Klewski A.:
-\newblock {\em TELEDETEKCJA. Wykorzystanie zdalnej informacji}.
+\newblock {\em Teledetekcja. Wykorzystanie zdalnej informacji}.
 \newblock Wydawnictwo Naukowe Akademii Morskiej, 2015.
+
+\bibitem{buto}
+Butowtt J., Kaczyñski R.:
+\newblock{\em Fotogrametria}
+\newblock{Wydawnictwo Wojskowej Akademii Technicznej, Warszawa 2003}
 
 \bibitem{SIP}
 Bielecka E., Maj K.:
@@ -376,3 +490,5 @@ Clausi D. A., Jernigan M. E.:
 
 
 \end{document}
+Status API Training Shop Blog About
+© 2016 GitHub, Inc. Terms Privacy Security Contact Help
