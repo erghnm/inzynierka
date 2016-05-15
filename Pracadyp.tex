@@ -1,0 +1,532 @@
+\documentclass[skorowidz,palatino,xodstep]{dyplomWEZUT}
+%&platex --translate-file=cp1250pl
+%\documentclass[skorowidz,brudnopis,palatino]{dyplomPS}
+
+ \nrwersji {0.2}
+
+\author   {Jêdrzej £ukasiuk}%
+\nralbumu {21746}
+\email    {nick@zut.edu.pl}
+%
+%\author   {Robert Nowicki}
+%\nralbumu {55212}
+
+\title    {Programowa implementacja filtrów Gabora w~procesie automatycznej klasyfikacji obiektów}
+\kierunek {Geodezja i Kartografia}%
+%\specjalnosc{Uk³ady i~Systemy Elektroniczne}
+
+\date     {2016}%
+\miejsce  {Szczecin}%
+
+\opiekun  {prof.~dr~hab.~in¿.~Józef~Sanecki}%
+\jednostka{Instytut In¿ynierii Ruchu Morskiego}%
+
+\newcommand{\zmien}[1]{!!!!!!!!!\textbf{#1}!!!!!!!!!!!}
+
+\makeglossary
+% Polecenie konieczne do wygenerowania plików z wykazem skrótów i oznaczeñ
+% makeindex -s Pracadyp.ist -t Pracadyp.glg -o Pracadyp.gls Pracadyp.glo
+
+
+\newcommand{\ber}{\begin{eqnarray*}}
+\newcommand{\eer}{\end{eqnarray*}}
+\newcommand{\beq}{\begin{eqnarray}}
+\newcommand{\eeq}{\end{eqnarray}}
+\newcommand{\bd}{\begin{displaymath}}
+\newcommand{\ed}{\end{displaymath}}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+
+
+\begin{document}
+
+\begin{streszczenie}
+Praca sk³ada siê z 3 rozdzia³ów, wprowadzenia i zakoñczenia. Skupiono siê w niej na analizie mo¿liwoœci wykorzystania filtrów Gabora w procesie zdalnego rozpoznania obiektów na zobrazowaniach fotogrametrycznych. Dwa pierwsze rozdzia³y maj¹ charakter teoretyczny. W pierwszym z nich opisana zosta³a struktura cyfrowych obrazów rastrowych, a tak¿e wprowadzone zosta³o pojêcie filtracji splotowej. Dodatkowo szczegó³owo scharakteryzowany zosta³ filtr Gabora, zarówno w dziedzinie czasowej, jak i czêstotliwoœciowej. Drugi rozdzia³a³ traktuje o klasyfikacji w teledetekcji. Zaprezentowane s¹ w nim typowe metody oraz podejœcia do tego procesu, wraz z~przyk³adami. Trzeci rodzia³ przedstawia wyniki przeprowadzonych przez autora badañ. Wskazano w nim metodykê prowadzonych dzia³añ, oraz ziulustrowano praktyczn¹ weryfikacjê algorytmu dla 3 ró¿nych przypadków. Podsumowanie i wnioski z przeprowadzonych prac stanowi¹ treœæ zakoñczenia pracy.
+\end{streszczenie}
+
+\slowakluczowe{filtry Gabora, klasyfikacja, zdalne rozpoznanie terenu}
+
+
+\tytulang{Software implementation of Gabor filters in the process of automatic object classification}
+
+\begin{abstract}
+This thesis consists three chapters, introduction and conclusion. It focused on the analysis of the possibilities of using Gabor filters in the process of remote identification of objects on imaging photogrammetry and remote sensing (?). The first two chapters are theoretical. The first one describes the structure of the digital raster images and also introduced the concept of convolution filtering. Additionally the Gabor filter was characterized in detail, both the time and the frequency domains. The second chapter deals with the classification in remote sensing. It presented the conventional methods and approaches to this process, including examples. The third section presents the results of research conducted by the author. It indicated  the methodology of operations, and illustrate practical verification of the algorithm for three different cases. Summary and conclusions of the work are the contents of the completion of the work.
+\newline \\ \textcolor{red}{POPROSIÆ ADAMA O SPRAWDZENIE POPRAWNOŒCI GRAMATYCZNEJ}
+\end{abstract}
+
+\keywords{Gabor filters, classification, remote reconnaissance}
+
+%% TO JEST TA ŒMIESZNA 'WK£ADKA' - EWENTUALNIE MO¯NA ZMERGOWAÆ OSOBNYM PROGRAMEM DWA GOTOWE PLIKI
+%\includepdf[pages=-]{tabela.pdf}
+
+\maketitle 
+
+\printglossary
+
+\Wprowadzenie 
+
+Podstaw¹ procesu zdalnego badania œrodowiska (ZBŒ) jest analiza i interpretacja zdjêæ pozyskanych zdalnie. Przez pojêcie interpretacji mo¿emy tu rozumieæ przede wszystkim wykrywanie i rozpoznawanie obiektów, jak równie¿ okreœlenie ich cech iloœciowych i~jakoœciowych.  \cite{Tele}
+
+Klasyczne podejœcie do interpretacji zdjêæ oparte jest o analizê wielospektraln¹. Analiza ta zak³ada, ¿e piksele obrazu reprezentuj¹ce ten sam obiekt maj¹ podobne wartoœci odpowiedzi spektralnej. Wobec tego w przestrzeni spektralnej bêd¹ skupia³y siê w grupach. % TUTAJ BYM COŒ DODA£ GENERALNIE
+
+Niew¹tpliwie podejœcie te ma swoje oczywiste zalety (prostota realizacji), jednak nie zawsze jest rozwi¹zaniem optymalnym. Spoœród innych algorytmów s³u¿acych  do klasyfikacji zdjêæ szczególnie obiecuj¹cym wydajê siê byæ tzw. algorytm klasyfikacji obiektowej. W algorytmie tym piksele obrazu nie s¹ rozpatrywane w sposób jednostkowy, lecz znaczenie ma ich lokalne rozmieszczenie. Piksele tworz¹ wówczas grupy, które spe³niaj¹ pewne warunki jednorodnoœci. Grupy te wizualnie stanowi¹ lokalne wzorce przestrzenne, które formalnie mo¿emy okreœliæ jako tekstura. 
+
+Jednym z narzêdzi s³u¿¹cych do wykrywania tekstur w obrazach jest filtr Gabora. Jest to filtr liniowy, którego reprezentacja czêstotliwoœciowa i orientacja jest zbli¿ona do ludzkiego systemu wizyjnego, przez co bardzo dobrze sprawdza siê jako deskryptor cech teksturalnych. Przetwarzaj¹c obraz z wykorzystaniem filtru Gabora o precyzyjnie dobranych parametrach jesteœmy zatem w stanie wydobyæ z obrazu wejœciowego informacjê o poszczególnych elementach sk³adowych obrazu, które spe³niaj¹ za³o¿one kryteria jednorodnoœci.
+
+\cel{Celem pracy jest analiza wybranych metod cyfrowego przetwarzania obrazów, oraz ich praktyczna realizacja, która umo¿liwi automatyczn¹ klasyfikacjê obiektów na zobrazowaniach lotniczych i fotogrametrycznych.} 
+
+
+
+\zakres{Zakres pracy obejmuje:
+\begin{itemize}
+	\item opis struktury cyfrowych obrazów rastrowych, oraz wybranych metod ich przetwarznania
+	\item matematyczny opis filtru Gabora; jego charakterystyki w dziedzinie czasowej i czêstotliwoœciowej 
+	\item omówienie zagadnienia klasyfikacji obiektów, klasyczne i alernatywne metody jej realizacji
+	\item zaproponowanie algorytmu do automatycznej klasyfikacji obiektów na podstawie dostêpnych materia³ów Ÿród³owych (?)
+	\item praktyczn¹ realizacjê algorytmu w œrodowisku \textsc{MatLab} dla wybranych zobrazowañ lotniczych/fotogrametrycznych
+	\item porównanie uzyskanych wyników z klasycznymi metodami klasyfikacji obietków
+\end{itemize}
+} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% ROZDZIA£: WYbrane metody analizy obrazów cyfrowych %%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\mbox{przetwarzania}
+\chapter{Charakterystyka rastrowych obrazów cyfrowych i wybrane metody ich przetwarzania}
+
+W dobie nieustaj¹cego rozwoju technologicznego, w jakiej aktualnie siê znajdujemy, zdecydowana wiêkszoœæ zdalnie pozyskiwanych zdjêæ ma charakter cyfrowy. Cech¹ charakterystyczn¹ takiego zdjêcia jest jego rozdzielczoœæ -- skoñczona liczba pikseli (punktów) matrycy na których przechowywana jest informacja obrazowa.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% Struktura rastrowych obrazów cyfrowych %%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Struktura rastrowych obrazów cyfrowych}
+Grafika rastrowa determinuje reprezentacjê obrazu jako dwuwymiarow¹ siatkê sk³adaj¹c¹ siê ze wczeœniej wspomnianych pikseli. Ka¿dy z pikseli natomiast przechowuje skoñczon¹ liczbê bêd¹c¹ informacj¹ o kolorze. Z samej ju¿ definicji wynika, ¿e reprezentacja ta jest nieci¹g³a (dyskretna). Obraz cyfrowy jest wiêc pewnym uproszczeniem w
+stosunku do tego, co odbiera ludzki zmys³ wzroku. Samo ograniczenie rozmiaru obrazu cyfrowego wynika z potrzeby jego zapisu na skoñczonej liczbie bajtów w komputerze, jak równie¿ ograniczeñ wynikaj¹cych z mo¿liwoœci dalszego przetwarzania takiego obrazu. Ograniczenia te mog¹ byæ reprezentowane na wielu p³aszczyznach \cite{kompana}:
+\begin{itemize}
+\item ograniczenie zdolnoœci rozpoznawania szczegó³ów,
+\item ograniczenie iloœci mo¿liwych do rozró¿nienia kolorów,
+\item analizowanie obrazu p³askiego zamiast przestrzennego,
+\item analizowanie obrazu statycznego zamiast dynamicznego.
+\end{itemize}
+
+Z formalnego punktu widzenia obraz mo¿emy zamodelowaæ przy u¿yciu funkcji (tzw. funkcji obrazu) dwóch zmiennych. Zmienne traktowane s¹ wówczas jako wspó³rzêdne i
+okreœlaj¹ jasnoœæ obrazu w tym punkcie.
+
+\begin{equation}
+0 \leq L(x,y) < \infty
+\end{equation}
+gdzie:
+\begin{flushleft}
+$L$ -- funkcja obrazu (luminancji) \\
+$(x,y)$ -- przestrzenna wspó³rzêdna funkcji L
+\end{flushleft}
+
+\begin{figure}[h]
+
+    \centering
+		    \begin{subfigure}{0.45\textwidth}
+        \includegraphics[height= 5.5cm]{figures/zwykly}
+        \caption{Obraz monochromatyczny}
+				\label{mono}
+         \end{subfigure}
+   \:
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics[height= 5.5cm]{figures/obraz3D}
+       \caption{Obraz (a) jako funkcja $L(m,n)$}
+        %\label{fig:tiger}
+    \end{subfigure}
+
+				\vspace{0.5cm}
+		\caption[Obraz monochromatyczny i jego wykres gdy traktowany jest jako funkcja]{Obraz monochromatyczny i jego wykres gdy traktowany jest jako funkcja}
+	\source{\url{http://earthexplorer.usgs.gov/}, adaptacja w³asna}
+	\label{obrazmono}
+\end{figure}
+Ka¿dy obraz rzeczywisty mo¿na przedstawiæ za pomoc¹ tej w³aœnie funkcji %(pamiêtajmy jednak, ¿e zawsze bêdzie on pewnym uproszczeniem). 
+. Proces przejœcia z obrazu analogowego na cyfrowy nosi nazwê dyskretretyzacji. Sk³ada siê on z 2 zasadniczych procesów: próbkowania i kwantyzacji. W etapie próbkowania ci¹g³a dziedzina obrazu
+analogowego zostaje zamieniona na skoñczony ci¹g próbek (w tym przypadku pikseli). W procesie kwantyzacji nastêpuje natomiast zmiana analogowej wartoœci janoœci na jej
+dyskretny odpowiednik. W efekcie funkcja L(x,y) staje siê macierz¹ L(m,n) o M wierszach i N kolumnach. Rozmiary tej macierzy definiuj¹ rozdzielczoœæ przestrzenn¹ obrazu cyfrowego, a ka¿dy element tej macierzy przechowuje skwantowany poziom jasnoœci \cite{zygar}.
+\begin{equation}
+L(m,n) = \left[ \begin{array}{cccc} L(1,1) & L(1,2) & \dots & L(1,N) \\ L(2,1) & L(2,2) & \dots & L(2,N) \\ \vdots & \vdots &  \ddots & \vdots \\L(M,1) & L(M,2) & \dots & L(M,N) \end{array} \right]
+\end{equation}
+
+Wybór rozdzielczoœci obrazu decyduje o jego jakoœci, a co za tym idzie, ma kluczowe znaczenie przy rozpoznawaniu szczegó³ów obrazu. Oczywiœcie naturalne wydaje siê stwierdzenie, ¿e im wiêksza rozdzielczoœæ tym lepiej.  Okazuje siê jednak, ¿e spostrze¿enie te nie jest prawdziwe. Liniowy wzrost rozdzielczoœci poci¹ga za sob¹ kwadratowy wzrost czasu przetwarzania i objêtoœci samej reprezentacji \cite{kompana}. Odpowiednia rozdzielczoœæ powinna wiêc stanowiæ kompromis pomiêdzy zajmowan¹ objêtoœci¹ a mo¿liw¹ do uzyskania z obrazu informacj¹. 
+
+Z punktu widzenia jakoœci obrazów cyfrowych bardzo wa¿nym parametrem jest równie¿ iloœæ dyskretnych stanów, któr¹ mo¿e przyjmowaæ pojedynczy piksel. Mo¿e byæ ona uto¿samiania z iloœci¹ kolorów reprezentowanych przez obraz. W zale¿noœci od tej liczby ró¿na bêdzie wielkoœæ pamiêci potrzebnej do zapisu obrazu (im wiêcej bêdzie dostêpnych dyskretnych stanów, tym wiêksza jest liczba bitów potrzebna do ich zapamiêtania). Podobnie jak w przypadku wyboru rozdzielczoœci, równie¿ wybór iloœci kolorów w obrazie powinien byæ kompromisem miêdzy zajmowan¹ pamiêci¹, a iloœci¹ zawartej w obrazie informacji. Najczêœciej wykorzystujemy jeden z podanych poni¿ej formatów obrazów:
+\begin{itemize}
+\item \textbf{binarny}
+\item \textbf{monochromatyczny}
+\item \textbf{kolorowy}
+\end{itemize}
+Ka¿dy z podanych powy¿ej formatów obrazów ma swoje specyficzne zastosowania.
+
+\subsection{Obrazy binarne}
+Jest to najprostszy z formatów obrazów rastrowych, zajmuj¹cy najmniej pamiêci (wymagany 1 bit na piksel). Wartoœæ koloru mo¿emy zakodowaæ za pomoc¹ 2 stanów -- 0 lub 1 (st¹d nazwa -- obraz binarny). Zazwyczaj przyjmuje siê, ¿e wartoœæ 0 reprezentuje kolor czarny, a wartoœæ 1 -- bia³y. Obrazy binarne s¹ czêsto pozyskiwane z obrazów monochromatycznych czy kolorowych do celów ich dalszego przetwarzania. Przetwarzanie obrazów odbywa siê wówczas znacznie szybciej, z u¿yciem ni¿szego kosztu obliczeniowego.
+
+\begin{figure}[b!]
+
+  \centering\includegraphics[scale= 0.55]{figures/bin}
+	\vspace{0.5cm}
+  \caption[Przyk³ad obrazu binarnego]{Przyk³ad obrazu binarnego}
+	\source{\url{http://earthexplorer.usgs.gov/}, adaptacja w³asna}
+  %\label{fig:rysunek2}\source{Opracowanie na podstawie dokumentacji elektronicznej MATLAB 7.0 \cite{Matlab}}
+\end{figure}
+
+\subsection{Obrazy monochromatyczne}
+Obrazy monochromatyczne (jednobarwne) charakteryzuj¹ siê tym, ¿e wartoœæ pojedynczego piksela wyra¿a jego wzglêdn¹ jasnoœæ. St¹d ich inna nazwa -- obrazy w skali szaroœci. Najczêœciej mamy do czynienienia z kodowaniem na 8 bitach (otrzymujemy wtedy $2^8 = 256$ dostêpnych poziomów szaroœci). Paleta kolorów zmienia siê wówczas od czarnego (reprezentuj¹cego wartoœæ 0) do bia³ego (wartoœæ 255). Przyk³ad takiego obrazu znajdziemy na Rys. (\ref{mono}).
+%\begin{figure}[h]
+	%\centering
+		%\includegraphics[scale=0.8]{figures/piksel.png}
+	%\caption{Reprezentacja obrazu cyfrowego}
+	%\label{fig:piksel}
+	%\source{Opracowanie w³asne}
+%\end{figure}
+
+\subsection{Obrazy kolorowe w przestrzeni barw RGB}
+\begin{figure}[b!]
+
+    \centering
+		    \begin{subfigure}{0.41\textwidth}
+        \includegraphics[width=\textwidth]{figures/rgbb}
+        \caption{Obraz w przestrzeni barw RGB}
+         \end{subfigure}
+   \\
+    \begin{subfigure}{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figures/r}
+       \caption{Sk³adowa R}
+        %\label{fig:tiger}
+    \end{subfigure}
+		\:
+		\begin{subfigure}{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figures/g}
+       \caption{Sk³adowa G}
+        %\label{fig:tiger}
+    \end{subfigure}
+		\:
+		  \begin{subfigure}{0.3\textwidth}
+        \includegraphics[width=\textwidth]{figures/b}
+       \caption{Sk³adowa B}
+        %\label{fig:tiger}
+    \end{subfigure}
+						
+				\vspace{0.5cm}
+		\caption[Obraz w przestrzeni barw RGB i jego sk³adowe]{Obraz w przestrzeni barw RGB i jego sk³adowe}
+	\source{\url{http://earthexplorer.usgs.gov/}, adaptacja w³asna}
+	\label{filtrt}
+\end{figure}
+Obrazy kolorowe w przestrzeni barw RGB charakteryzuj¹ siê tym, ¿e ka¿dy piksel opisany jest za pomoc¹ 3 liczb. Liczby te nazywane s¹ sk³adowymi barwnymi, oznaczane s¹ literami R, G, B i okreœlaj¹ zawartoœæ barw podstawowych (odpowiednio: czerwonej, zielonej i niebieskiej) w pikselu. Kolor otrzymuje siê w wyniku zmieszania siê 3 sk³adowych. Zazwyczaj stosuje siê 24-bitowy zapis kolorów, w którym ka¿da sk³adowa przechowywana jest na 8 bitach. Nale¿y zwróciæ uwagê, ¿e w takim przypadku iloœæ mo¿liwych do uzyskania kolorów wyniesie $256^3 = 16 \; 777 \;216 $. Pojedynczy kolor RGB mo¿na wyznaczyæ ze wzoru:
+\begin{equation}
+ numer \: koloru= R \cdot 65536 + G \cdot 256 + B
+\end{equation}
+gdzie sk³adowe $R$, $G$, $B$ przyjmuj¹ wartoœci od $0$ do $255$. Gdy wszystkie sk³adowe osi¹gaj¹ wartoœæ $0$ mamy do czynienia z kolorem czarnym, natomiast dla wartoœci sk³adowych równych $255$ otrzymujemy kolor bia³y -- dla modelu RGB zachodzi synteza addytywna.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% FILTRACJA SPLOTOWA %%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\newpage
+\section{Podzia³ algorytmów przetwarzania obrazów}
+Celem cyfrowego przetwarzania obrazów jest dokonanie takich przekszta³ceñ na obrazie wejœciowym, aby obraz wyjœciowy niós³ ze sob¹ wiêcej informacji. Ze wzglêdu na posiadane cechy algorytymy te mo¿emy podzieliæ na pewne grupy:
+\begin{itemize}
+\item przekszta³cenia geometryczne
+\item przekszta³cenia punktowe (bezkontekstowe)
+\item przekszta³cenia kontekstowe
+\item przekszta³cenia widmowe (transformata Fouriera)
+\item przekszta³cenia morfologiczne
+\end{itemize}
+Z racji przyjêtej w dalszej czêœci pracy szczegó³ow skupiono sie na opisie przekszta³ceñ kontekstowych.
+\section{Filtracja splotowa}
+
+Z racji metodyki prowadzonych dzia³añ szczegó³owo opisana zostanie filtracja splotowa nale¿¹ca do 
+Filtracja splotowa nale¿y do grupy przekszta³ceñ kontekstowych. Oznacza to, ¿e do wyznaczenia wartoœci pojedynczego piksela obrazu wyjœciowego potrzebne jest wykonanie obliczeñ na wielu pikselach obrazu wejœciowego. 
+
+Z matematycznego punktu widzenia operacjê t¹ mo¿emy zapisaæ w sposób nastêpuj¹cy:
+\begin{equation}
+g(x,y) = f * M = \sum\limits_{k=-\frac{m}{2}}^{\frac{m}{2}}\sum\limits_{k=-\frac{m}{2}}^{\frac{m}{2}}{M(h,k)\cdot f(x-h,y-k)}
+\end{equation}
+gdzie:
+% zmieniæ te wypunktowanie na linie
+%\begin{itemize}
+	%\item $*$ -- operacja splotu
+	%\item $f$ -- obraz wejœciowy
+	%\item $M$ -- maska filtru
+	%\item $m$ -- rozmiar maski 
+	%%\item
+%\end{itemize}
+\begin{figure}[b!]
+
+  \centering\includegraphics[scale= 0.6]{figures/splocik}
+	\vspace{0.5cm}
+  \caption[Zasada dzia³ania splotu dyskretnego]{Zasada dzia³ania splotu dyskretnego}
+	\source{Opracowanie w³asne}
+  %\label{fig:rysunek2}\source{Opracowanie na podstawie dokumentacji elektronicznej MATLAB 7.0 \cite{Matlab}}
+\end{figure}
+Innym przyk³adem filtru splotowego jest filtr Gabora, który zosta³ opisany w kolejnej sekcji.
+\begin{figure}[h]
+
+    \centering
+		    \begin{subfigure}{0.46\textwidth}
+        \includegraphics[scale=0.45]{figures/dolno}
+        \caption{Dolnoprzepustowy}
+			  \end{subfigure}
+   %\:
+    \begin{subfigure}{0.46\textwidth}
+        \includegraphics[scale=0.45]{figures/gorny}
+       \caption{Górnoprzepustowy}
+        %\label{fig:tiger}
+    \end{subfigure}
+
+				\vspace{0.5cm}
+		\caption[Filtr dolno i gornoprzepustowy]{Filtr dolno- i gornoprzepustowy}
+	\source{\url{http://earthexplorer.usgs.gov/}, adaptacja w³asna}
+	\label{aey}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%% FILTR GABORA %%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Filtr Gabora}
+
+Filtr Gabora jest filtrem pasmowoprzepustowym. Oznacza to, ¿e po filtracji z jego
+wykorzystaniem zostan¹ wyeksponowane sk³adowe widma obrazu o okreœlonej czêstotliwoœci. Jego twórc¹ jest Dennis Gabor, wêgieski laureat Nagrody Nobla w dziedzinie fizyki (1900-1979). Filtr ten wykorzystywany jest g³ównie do detekcji tekstur w obrazach, oraz przy wykrywaniu krawêdzi. W cyfrowym przetwarzaniu obrazów mo¿na go realizowaæ w dziedzinie przestrzennej poprzez dyskretn¹ dwuwymiarow¹ konwolucjê z wyliczon¹ mask¹ lub przez zwyk³e mno¿enie w dziedzinie czêstotliwoœci (wykorzystujemy tutaj twierdzenie o splocie).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% DZIEDZINA CZASU %%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Dziedzina czasu}
+W dziedzinie przestrzennej filtr charakteryzowany jest jako zespolona sinusoida (ang. carrier) modulowana funkcj¹ Gaussa (funkcjê tê okreœla siê jako koperta, ang. envelope).
+%% RÓWNANIE FUNKCJI GABORA W DZIEDZINIE CZASU
+\begin{equation}
+g(x,y,f,\theta) = e^{-\frac{1}{2}\left(\frac{x_\theta^2}{\sigma_x^2}+\frac{y_\theta^2}{\sigma_y^2} \right)} \times e^{j 2 \pi f x_\theta}
+\label{maineq}
+\end{equation}
+gdzie $f$ jest czêstotliwoœci¹ fali sinusoidalnej, $\theta$ -- orientacj¹ filtru Gabora, $\sigma_x$ , $\sigma_y$ s¹ ostroœciami filtru odpowiednio wzd³u¿ osi $x$ i $y$. Wspó³rzêdne $x_\theta$ oraz $y_\theta$ umieszczone s¹ w skrêconym uk³adzie wspó³rzêdnych, mo¿emy je wyliczyæ zgodnie ze wzorem:
+
+\begin{eqnarray}
+\begin{array}{cccccc}
+ x_{\theta} & = &  &x \cos\theta& + &y\sin\theta \\
+ y_{\theta} & = & - &x\sin\theta & + &y\cos\theta 
+
+\end{array}
+\label{eqrot2}
+\end{eqnarray}
+Zgodnie z twierdzeniem Eulera wzór (\ref{maineq}) mo¿emy przedstawiæ jako:
+\begin{equation}
+g(x,y,f,\theta) = e^{-\frac{1}{2}\left(\frac{x_\theta^2}{\sigma_x^2}+\frac{y_\theta^2}{\sigma_y^2} \right)} \times \left( \cos(2\pi f x_\theta) + j  \sin(2 \pi f x_\theta) \right)
+\end{equation}
+Na podstawie tego wzoru jawnie widaæ ¿e filtr ma 2 czêœci: rzeczywist¹ i urojon¹. W
+zastosowaniach praktycznych czêsto zamiast zespolonej postaci funkcji Gabora wyko-
+rzystuje siê jego postaæ rzeczywist¹. Wybiera siê wówczas modulacjê tylko fal¹ sinuso-
+idaln¹ lub cosinusoidaln¹. Ze wzglêdu na w³aœciwoœci tych funkcji trygonometrycznych
+w swojej dziedzinie mówimy wówczas ¿e filtr jest nieparzysty (w przypadku modula-
+cji sinusem) lub parzysty (modulacja cosinusem). W znacz¹cej czêœci przypadków do
+filtracji u¿ywamy filtru parzystego (ang. Even).
+
+\begin{figure}[h]
+
+    \centering
+		    \begin{subfigure}{0.45\textwidth}
+        \includegraphics[width=\textwidth]{figures/filtrsin}
+        \caption{Zespolona sinusoida -- czêœæ parzysta}
+         \end{subfigure}
+   \:
+    \begin{subfigure}{0.45\textwidth}
+        \includegraphics[width=\textwidth]{figures/filtrenv}
+       \caption{Koperta Gaussa}
+        %\label{fig:tiger}
+    \end{subfigure}
+		\\
+		\begin{subfigure}{0.45\textwidth}
+        \includegraphics[width=\textwidth]{figures/filtrall}
+       \caption{Filtr Gabora -- czêœæ parzysta}
+        %\label{fig:tiger}
+    \end{subfigure}
+				
+				\vspace{0.5cm}
+		\caption[Filtr Gabora w dziedzinie przestrzennej]{Filtr Gabora w dziedzinie przestrzennej. Parametry: $f = 0.3$, $\theta = \pi/3$, $\sigma_x=\sigma_y= 2$}
+	\source{Opracowanie w³asne}
+	\label{filtrt}
+\end{figure}
+
+% to póŸniej skasowaæ
+%\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% DZIEDZINA CZÊSTOTLIWOŒÆI %%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Dziedzina czêstotliwoœci}
+
+%% RÓWNANIE FUNKCJI GABORA W DZIEDZINIE CZÊSTOTLIWOŒCI
+%% TUTAJ COŒ SIÊ NIE ZGADZA ?!!!!! sk¹d by³ brany wzór ??
+\begin{equation}
+G(u,v,f,\theta) = \frac{1}{2\pi\sigma_u\sigma_v}\left[e^{-\frac{1}{2}\left(\frac{(u_\theta-u_0)^2}{\sigma_u^2}+\frac{(v_\theta-v_0)^2}{\sigma_v^2} \right)} + e^{-\frac{1}{2}\left(\frac{(u_\theta+u_0)^2}{\sigma_u^2} + \frac{(v_\theta+v_0)^2}{\sigma_v^2} \right)} \right]
+\label{maineqf}
+\end{equation}
+gdzie $u_0$, $v_0$ s¹ równe odpowiednio $\frac{2\pi\cos\theta}{f}$, $\frac{2\pi\sin\theta}{f}$. Ponadto zachodzi zale¿noœæ:
+\begin{eqnarray}
+\begin{array}{cccccc}
+ u_{\theta} & = &  &u \cos\theta& + &v\sin\theta \\
+ v_{\theta} & = & - &u\sin\theta & + &v\cos\theta 
+\label{eqrot}
+\end{array}
+\end{eqnarray}
+
+\begin{figure}[h]
+
+  \centering\includegraphics[scale= 0.5]{figures/filtrdzf}
+	\vspace{0.5cm}
+  \caption[Filtr Gabora w dziedzinie czêstotliwoœci]{Filtr Gabora w dziedzinie czêstotliwoœci. Parametry identyczne jak dla filtru z Rysunku \ref{filtrt}}
+	\source{Opracowanie w³asne}
+  %\label{fig:rysunek2}\source{Opracowanie na podstawie dokumentacji elektronicznej MATLAB 7.0 \cite{Matlab}}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% ROZDZIA£ PROCEDURY KLASYFIKACYJNE%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Procedury klasyfkacyjne}
+\section{Idea klasyfikacji}
+\section{Klasyfikacja nadzorowana}
+\section{Klasyfikacja nienadzorowana}
+
+%%%%%%%%%%%%%%%%%%%%%%% ROZDZIA£ PRAKTYCZNY - IMPLEMENTACJA %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Implementacja filtru Gabora w œrodowisku \textsc{MatLab}}
+\section{Metodyka dzia³añ}
+\section{Przypadek 1}
+\section{Przypadek 2}
+\section{Przypadek 3}
+
+
+\Zakonczenie
+TUTAJ JAKIEŒ ZWIÊZ£E PODSUMOWANIE PRACY KILKA PIERDÓ£ ITP
+%W~tym miejscu nale¿y umieœciæ zakoñczenie pracy przygotowane zgodnie
+%z~wczeœniejszymi zaleceniami (patrz rozdzia³~\ref{sec:zakonczenie}
+%na stronie~\pageref{sec:zakonczenie}).
+%
+%
+%%
+%% Za³¹czniki (opcjonalnie):
+%\appendix
+%\chapter{Tytu³ za³¹cznika jeden\label{chap:app1}}
+%
+%Treœæ za³¹cznika jeden. Mog¹ to byæ elementy zwi¹zane z~opisem
+%technicznym wykonanych w~pracy urz¹dzeñ, programów, dokumentacj¹
+%projektow¹ itp. Mog¹ to byæ równie¿ Ÿród³a literaturowe w~postaci
+%kart katalogowych najistotniejszych elementów elektronicznych u¿ytych
+%w~projektowanym urz¹dzeniu itp.
+%
+\appendix
+\chapter{Zawartoœæ dodatkowej p³yty CD-ROM\label{chap:appCD}}
+
+W~tym rozdziale powinno siê przedstawiæ \textbf{zawartoœæ DODATKOWEJ p³yty CD do³¹czonej
+ewentualnie do wydrukowanej pracy}, która zawiera kody programów,
+wersje elektroniczne dokumentacji, materia³y dodatkowe zebrane przez
+studenta itp.
+
+\noindent \textbf{Uwaga! Nie jest to opis p³yty, zawieraj¹cej wersjê elektroniczn¹ pracy, ale p³yty dodatkowej, nieobowi¹zkowej.}
+
+\begin{thebibliography}{15}
+
+\bibitem{Tele}
+Sanecki J., Stêpieñ G., Konieczny J., Niebylski J., Klewski A.:
+\newblock {\em Teledetekcja. Wykorzystanie zdalnej informacji}.
+\newblock Wydawnictwo Naukowe Akademii Morskiej, 2015.
+
+\bibitem{buto}
+Butowtt J., Kaczyñski R.:
+\newblock{\em Fotogrametria}
+\newblock{Wydawnictwo Wojskowej Akademii Technicznej, Warszawa 2003}
+
+\bibitem{SIP}
+Bielecka E., Maj K.:
+\newblock {\em Systemy informacji przestrzennej. Podstawy teoretyczne.}
+\newblock Wojskowa Akademia Techniczna, Warszawa 2009.
+
+\bibitem{zygar}
+Zygarlicka M.:
+\newblock {\em Wybrane metody przetwarzania obrazów w analizach czasowo-czêstotliwoœciowych na przyk³adzie zak³óceñ w sieciach elektroenergetycznych}.
+\newblock {Autoreferat rozprawy doktorskiej, wydawnictwo Politechniki Opolskiej, Opole 2011.}
+
+\bibitem{raster}
+Kubik T., Paluszyñski W., Iwaniak A. Tymków P.:
+\newblock {\em Klasyfikacja obrazów rastrowych~z wykorzystaniem sztucznych sieci neuronowych i statystycznych metod klasyfikacji}.
+\newblock Wydawnictwo Uniwersytetu Przyrodniczego we Wroc³awiu, Wroc³aw 2008.
+
+\bibitem{Lew}
+Lewiñski S.:
+\newblock {\em Obiektowa klasyfikacja zdjêæ satelitarnych jako metoda pozyskiwania informacji o pokryciu i u¿ytkowaniu Ziemii.}
+\newblock Instytut Geodezji i Kartografii PW, Warszawa 2007.
+
+\bibitem{Lew2}
+Lewiñski S.:
+\newblock{\em Rozpoznanie form pokrycia i u¿ytkowania Ziemii na zdjêciu satelitarnym Landsat ETM+ metod¹ klasyfikacji obiektowej}.
+\newblock{Polskie Towarzystwo Informacji Przestrzennej, Roczniki Geomatyki,
+tom IV, z. 3, s. 139-150. Warszawa.}
+
+\bibitem{marmol1}
+Marmol U., Lenda G.:
+\newblock {\em Filtry teksturalne w procesie automatycznej klasyfikacji obiektów}.
+\newblock {Archiwum Fotogrametrii, Kartografii i Teledetekcji, Vol. 21, 2010, s. 235-243}
+
+\bibitem{kompana}
+Tadeusiewicz R., Korohoda P.:
+\newblock {\em Komputerowa analiza i przetwarzanie obrazów}
+\newblock{Wydawnictwo Fudacji Postêpu telekomunikacji, Kraków 1997}
+
+\bibitem{marmol2}
+Marmol U.:
+\newblock{Use of Gabor filters for texture classification of airobrne images and lidar data}.
+\newblock{Archives of Photogrammetry, Cartography and Remote Sensing, Vol. 22, 2011, pp. 325-336}
+
+
+
+\bibitem{design}
+Vo\ss{} N., Mertsching B.:
+\newblock{\em Design and Implementation of an Accelerated
+Gabor Filter Bank Using Parallel Hardware}.
+% TUTAJ TRZEBA JESZCZE SPRAWDZIÆ CZY DOBRZE
+\newblock{Technical Report (?),University of Hamburg, Department of Computer Science}.
+
+\bibitem{effic}
+Ilonen J., K\"am\"ar\"ainen J.-K., Kalvi\"ainen H.:
+\newblock{\em Efficient Computation of Gabor Features}.
+\newblock{Lappeenranta 2005}
+
+\bibitem{opttex}
+Clausi D. A., Jernigan M. E.: 
+\newblock{\em Designing Gabor filters for optimal texture separability.}
+\newblock{Pattern Recognition 33, s. 1835–1849., 2000}
+
+\end{thebibliography}
+
+%%%%%%%%%%%%%%%%%%%%%% SPIS RYSUNKÓW %%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\listoffigures
+
+%%%%%%%%%%%%%%%%%%%%%% SPIS TABEL %%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\listoftables
+
+
+%%%%%%%%%%%%%%%%%%%%%% SPIS KODÓW RÓD£OWYCH %%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\listof{Program}{Spis kodów Ÿród³owych}
+\addcontentsline{toc}{chapter}{Spis kodów Ÿród³owych}
+
+
+%% Skorowidz (opcjonalnie)
+\printindex
+
+
+\end{document}
+Status API Training Shop Blog About
+© 2016 GitHub, Inc. Terms Privacy Security Contact Help
